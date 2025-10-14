@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Weather App</h1>
+      <form id="weather-form">
+        <label for="city">City:</label>
+        <input
+          type="text"
+          id="city"
+          list="city-list"
+          placeholder="e.g., Ho Chi Minh"
+          required
+          autocomplete="off"
+        />
+        <datalist id="city-list"></datalist>
+        <button type="submit">Get Weather</button>
+      </form>
+
+      <div id="result" class="card hidden"></div>
+      <div id="error" class="error hidden"></div>
+
+      <div class="note">
+        <p>
+          Note: Results are cached for 60 seconds. When upstream fails, the app
+          will return the most recent cached data (if available).
+        </p>
+      </div>
+    </div>
+
+    <script src="/main.js"></script>
+  </body>
+</html>
