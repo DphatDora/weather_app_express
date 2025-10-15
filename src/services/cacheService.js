@@ -5,20 +5,46 @@ const { ensureConnected } = require("../lib/redisClient");
 const DEFAULT_TTL_SECONDS = 60;
 
 async function getCache(key) {
-  const client = await ensureConnected();
-  const val = await client.get(key);
-  if (!val) return null;
   try {
-    return JSON.parse(val);
-  } catch (_e) {
+    // Redis cache failure during lookup
+    const client = await ensureConnected();
+    const val = await client.get(key);
+    if (!val) return null;
+
+    try {
+      // Redis returns corrupted/invalid data
+      const parsed = JSON.parse(val);
+
+      // Validate parsed data structure
+      if (!parsed || typeof parsed !== "object") {
+        console.error(`Invalid cache data structure for key: ${key}`);
+        return null;
+      }
+
+      return parsed;
+    } catch (parseError) {
+      // Corrupted JSON in cache
+      console.error(
+        `Failed to parse cache data for key ${key}:`,
+        parseError.message
+      );
+      return null;
+    }
+  } catch (error) {
+    // Redis connection or operation failure
+    console.error("Redis cache lookup error:", error.message);
     return null;
   }
 }
 
 async function setCache(key, value, ttlSeconds = DEFAULT_TTL_SECONDS) {
-  const client = await ensureConnected();
-  const payload = JSON.stringify(value);
-  await client.set(key, payload, { EX: ttlSeconds });
+  try {
+    const client = await ensureConnected();
+    const payload = JSON.stringify(value);
+    await client.set(key, payload, { EX: ttlSeconds });
+  } catch (error) {
+    console.error("Redis cache set error:", error.message);
+  }
 }
 
 module.exports = { getCache, setCache, DEFAULT_TTL_SECONDS };

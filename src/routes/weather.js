@@ -8,19 +8,42 @@ const {
   DEFAULT_TTL_SECONDS,
 } = require("../services/cacheService");
 const { fetchWeather } = require("../services/openWeatherService");
+const {
+  validateCityName,
+  sanitizeInput,
+  detectSQLInjection,
+} = require("../middleware/validation");
 
 router.get("/", async (req, res) => {
-  const city = (req.query.city || "").trim();
-  if (!city) {
-    return res.status(400).json({ message: "City is required" });
+  const rawCity = req.query.city || "";
+
+  // Empty city parameter
+  if (!rawCity || typeof rawCity !== "string") {
+    return res.status(400).json({ message: "Invalid city name" });
   }
 
+  // SQL Injection detection
+  if (detectSQLInjection(rawCity)) {
+    return res.status(400).json({ message: "Invalid city name" });
+  }
+
+  // XSS prevention - sanitize input
+  const sanitized = sanitizeInput(rawCity);
+
+  // Validate city name (length, characters)
+  const validation = validateCityName(sanitized);
+  if (!validation.valid) {
+    return res.status(400).json({ message: validation.error });
+  }
+
+  const city = validation.city;
   const cacheKey = `weather:${city.toLowerCase()}`;
   const start = Date.now();
   let wasCacheHit = false;
   let warning = null;
 
   try {
+    // Cache hit
     const cached = await getCache(cacheKey);
     if (cached) {
       wasCacheHit = true;
@@ -35,11 +58,17 @@ router.get("/", async (req, res) => {
       });
     }
 
+    // Cache miss, fetch from API
     const data = await fetchWeather(city, {
       provider: process.env.OPENWEATHER_PROVIDER,
       mockBaseUrl: `${req.protocol}://${req.get("host")}`,
     });
     const responseTimeMs = Date.now() - start;
+
+    // Validate API response data
+    if (!data || typeof data.temperature !== "number") {
+      throw new Error("Invalid API response schema");
+    }
 
     await setCache(cacheKey, {
       temperature: data.temperature,
@@ -56,9 +85,11 @@ router.get("/", async (req, res) => {
       warning,
     });
   } catch (err) {
-    // Fallback to last cache if exists
+    // Cache miss, API fail, stale cache exists - return stale data with warning
+    // External API errors
     const cached = await getCache(cacheKey);
     const responseTimeMs = Date.now() - start;
+
     if (cached) {
       warning = "Using cached data due to upstream error";
       return res.json({
@@ -66,11 +97,13 @@ router.get("/", async (req, res) => {
         temperature: cached.temperature,
         status: cached.status,
         responseTimeMs,
-        cache: { hit: true, key: cacheKey },
+        cache: { hit: true, key: cacheKey, stale: true },
         warning,
       });
     }
-    return res.status(500).json({
+
+    // Cache miss, API fail, no cache - return HTTP 503
+    return res.status(503).json({
       message: "Weather service unavailable",
     });
   }

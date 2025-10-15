@@ -3,11 +3,14 @@
 ### Features
 
 - Endpoint `GET /weather?city=`: returns temperature (°C) and weather status
+- **Input Validation**: City name 1-30 chars, letters + Vietnamese diacritics only
+- **Security**: SQL Injection & XSS prevention, Rate limiting (100 req/min)
 - City-based caching for 60 seconds (Redis)
 - EJS frontend with fetch to display results and response time
 - Fallback: if third-party API fails → return most recent cached data (if available) + warning
 - Internal OpenWeather mock: `GET /mock/openweather/weather?q=City&delayMs=...&temp=...&status=...&fail=true|false`
 - Autocomplete with Vietnam cities list (from CSV)
+- **Error Handling**: Proper HTTP status codes (400, 429, 503)
 
 ### Requirements
 

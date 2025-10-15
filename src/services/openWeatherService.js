@@ -17,23 +17,64 @@ async function fetchWeatherFromReal(city) {
     units: "metric",
   };
   const start = Date.now();
-  const resp = await axios.get(url, { params, timeout: 7000 });
-  const durationMs = Date.now() - start;
-  return normalizeOpenWeather(resp.data, durationMs);
+
+  try {
+    // API timeout > 5s
+    const resp = await axios.get(url, { params, timeout: 5000 });
+    const durationMs = Date.now() - start;
+
+    // Empty body check
+    if (!resp.data) {
+      throw new Error("API returned empty body");
+    }
+
+    return normalizeOpenWeather(resp.data, durationMs);
+  } catch (error) {
+    if (error.code === "ECONNABORTED") {
+      throw new Error("API request timeout");
+    }
+    throw error;
+  }
 }
 
 async function fetchWeatherFromMock(city, baseUrl) {
   const url = `${baseUrl || ""}${mockBasePath}/weather`;
   const params = { q: city };
   const start = Date.now();
-  const resp = await axios.get(url, { params, timeout: 5000 });
-  const durationMs = Date.now() - start;
-  return normalizeOpenWeather(resp.data, durationMs);
+
+  try {
+    // Timeout check
+    const resp = await axios.get(url, { params, timeout: 5000 });
+    const durationMs = Date.now() - start;
+
+    // Empty body check
+    if (!resp.data) {
+      throw new Error("Mock API returned empty body");
+    }
+
+    return normalizeOpenWeather(resp.data, durationMs);
+  } catch (error) {
+    if (error.code === "ECONNABORTED") {
+      throw new Error("Mock API request timeout");
+    }
+    throw error;
+  }
 }
 
 function normalizeOpenWeather(data, durationMs) {
+  // Validate schema and data types
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid API response format");
+  }
+
   const temp = data?.main?.temp;
   const status = data?.weather?.[0]?.description || "unknown";
+
+  // Check if temperature is a valid number
+  if (temp !== undefined && typeof temp !== "number") {
+    throw new Error("Invalid temperature data type");
+  }
+
   return {
     temperature: typeof temp === "number" ? temp : null,
     status,

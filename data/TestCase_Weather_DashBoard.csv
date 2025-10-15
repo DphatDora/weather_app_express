@@ -1,0 +1,65 @@
+ID,Description,Pre-condition,Steps,Expected,Actual,Parameters
+TC01,City name length within 1–30 characters,-,"1. Nhập city='Hanoi'
+ 2. Gửi request /weather?city=Hanoi",System accepts the city name,,city=Hanoi
+TC02,"City name with diacritics, valid",-,"1. Nhập city='Hồ Chí Minh'
+ 2. Gửi request /weather?city=Hồ Chí Minh",System accepts the city name,,city=Hồ Chí Minh
+TC03,City name length equal to minimum valid value (1 character),-,"1. Nhập city='A'
+ 2. Gửi request",System accepts the city name,,city=A
+TC04,City name length equal to maximum valid value (30 characters),-,"1. Nhập city='ABCDEFGHIJKLMNOPQRSTUVWXYZABCD'
+ 2. Gửi request",System accepts the city name,,city=ABCDEFGHIJKLMNOPQRSTUVWXYZABCD
+TC05,Empty city name,-,"1. Nhập city=''
+ 2. Gửi request",Error: 'Invalid city name',,city=
+TC06,City name longer than 30 characters,-,"1. Nhập city='ThisCityNameIsWayTooLongForValidationTest'
+ 2. Gửi request",Error: 'Invalid city name',,city=ThisCityNameIsWayTooLongForValidationTest
+TC07,City name containing numbers,-,"1. Nhập city='HaNoi1'
+ 2. Gửi request",Error: 'Invalid city name',,city=HaNoi1
+TC08,City name containing special characters,-,"1. Nhập city='H@ Nội'
+ 2. Gửi request",Error: 'Invalid city name',,city=H@ Nội
+TC09,City name contains only spaces,-,"1. Nhập city=' '
+ 2. Gửi request",Error: 'Invalid city name',,city=' '
+TC10,City name length smaller than minimum value (0 characters),-,"1. Nhập city=''
+ 2. Gửi request",Error: 'Invalid city name',,city=
+TC11,City name length equal to minimum valid value (1 character),-,"1. Nhập city='A'
+ 2. Gửi request",Accept and allow input,,city=A
+TC12,City name length just above minimum (2 characters),-,"1. Nhập city='Ha'
+ 2. Gửi request",Accept and allow input,,city=Ha
+TC13,City name length just below maximum (29 characters),-,"1. Nhập city='ABCDEFGHIJKLMNOPQRSTUVWXYZABC'
+ 2. Gửi request",Accept and allow input,,city=ABCDEFGHIJKLMNOPQRSTUVWXYZABC
+TC14,City name length equal to maximum valid value (30 characters),-,"1. Nhập city='ABCDEFGHIJKLMNOPQRSTUVWXYZABCD'
+ 2. Gửi request",Accept and allow input,,city=ABCDEFGHIJKLMNOPQRSTUVWXYZABCD
+TC15,City name length greater than maximum valid value (31 characters),-,"1. Nhập city='ABCDEFGHIJKLMNOPQRSTUVWXYZABCDE'
+ 2. Gửi request",Error: 'Invalid city name',,city=ABCDEFGHIJKLMNOPQRSTUVWXYZABCDE
+TC16,Cache hit,"System idle, cache has Hanoi",1. Gửi /weather?city=Hanoi,Return JSON from cache (source=cache),,city=Hanoi
+TC17,"Cache miss, API success","System idle, API available",1. Gửi /weather?city=London,Return JSON from API and save to cache,,city=London
+TC18,"Cache miss, API fail, stale cache exists",Stale cache exists,1. Gửi /weather?city=Paris,Return stale JSON with warning,,city=Paris
+TC19,"Cache miss, API fail, no cache","No cache, API down",1. Gửi /weather?city=Berlin,Return HTTP 503,,city=Berlin
+TC20,Empty city parameter,-,1. Gửi /weather?city='',Return HTTP 400 + message,,city=
+TC21,Retry with valid input after error,System previously in error,1. Gửi /weather?city=Tokyo,Return JSON from cache/API,,city=Tokyo
+TC22,Send new request after success,System in valid state,1. Gửi /weather?city=NewYork,"Reset state, return new JSON",,city=NewYork
+TC23,Cache hit (data available),Cache ready,1. Gửi request /weather?city=Hanoi,Return cache data,,city=Hanoi
+TC24,"Cache miss, API success","Cache empty, API available",1. Gửi request /weather?city=London,Return API data and save to cache,,city=London
+TC25,"Cache miss, API fail, stale exists",Stale cache exists,1. Gửi request /weather?city=Paris,Return stale data with warning,,city=Paris
+TC26,"Cache miss, API fail, no cache","No cache, API down",1. Gửi request /weather?city=Berlin,Return HTTP 503,,city=Berlin
+TC27,Invalid input,-,1. Gửi request /weather?city='@@@',Return HTTP 400,,city=@@@
+TC28,Redis cache failure during lookup,Redis unavailable,1. Gửi request /weather?city=Hanoi,"Fallback to DB, log Redis error",,city=Hanoi
+TC29,Redis returns corrupted/invalid data,Cache contains malformed JSON,1. Gửi request /weather?city=Hanoi,"System ignores cache, fetches fresh data",,city=Hanoi
+TC30,Third-party API responds with unexpected schema,API returns invalid schema,1. Gửi request /weather?city=Paris,System validates and uses default values,,city=Paris
+TC31,Third-party API changes data type unexpectedly,API returns wrong types,1. Gửi request /weather?city=Berlin,"Reject invalid payload, log error",,city=Berlin
+TC32,External API returns 500 Internal Server Error,API down,1. Gửi request /weather?city=London,Trigger fallback and log error,,city=London
+TC33,External API returns timeout (>5s),API slow,1. Gửi request /weather?city=Paris,Abort request and use cache fallback,,city=Paris
+TC34,External API returns empty body,API returns blank response,1. Gửi request /weather?city=Rome,"Log error, trigger retry or fallback",,city=Rome
+TC35,External API returns malformed JSON,API returns invalid JSON,1. Gửi request /weather?city=Tokyo,Discard invalid data and use fallback,,city=Tokyo
+TC36,Display correct city name on dashboard,-,1. Nhập 'Hanoi' và click Search,Dashboard shows 'Weather in Hanoi',,city=Hanoi
+TC37,Display correct weather icon,API returns Rain,1. Nhập 'London' và click Search,UI shows rain icon,,city=London
+TC40,Error popup shown for invalid city,-,"1. Nhập city='@@@'
+ 2. Click Search",Popup shows 'Invalid city name',,city=@@@
+TC41,Response <2s when cache hit,Cache ready,1. Gửi request /weather?city=Hanoi,Response time < 2 seconds,,city=Hanoi
+TC42,Response <5s when API call,"Cache miss, API available",1. Gửi request /weather?city=London,Response time < 5 seconds,,city=London
+TC43,System handles multiple concurrent requests,-,1. Gửi 20 requests song song,"No crash or error, stable performance",,city=random
+TC44,SQL Injection attempt,-,1. Gửi /weather?city='Hanoi' OR 1=1--,"Reject invalid query, no injection",,city='Hanoi' OR 1=1--
+TC45,XSS attempt,-,1. Gửi /weather?city=<script>alert(1)</script>,"No script executed, return safe error",,city=<script>alert(1)</script>
+TC46,Rate limit exceeded,-,1. Gửi >100 requests/phút từ cùng IP,Return HTTP 429 Too Many Requests,,city=Hanoi
+TC47,Search history saved successfully,User logged in,"1. Tìm kiếm city='Hanoi'
+ 2. Kiểm tra bảng search_history",Record created for city=Hanoi,,city=Hanoi
+TC48,Displayed data matches API,API returns temp=32°C,1. Mở dashboard city='Hanoi',UI shows 32°C,,city=Hanoi
+TC49,Cache invalidated after data change,"Cache expired, new API data available",1. Gửi request /weather?city=Hanoi,Cache refreshed with new data,,city=Hanoi

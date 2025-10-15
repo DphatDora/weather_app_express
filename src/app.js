@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const cors = require("cors");
 
 const routes = require("./routes");
+const { rateLimitMiddleware } = require("./middleware/rateLimiter");
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(rateLimitMiddleware);
 
 // Static files
 app.use(express.static(path.join(__dirname, "../public")));
