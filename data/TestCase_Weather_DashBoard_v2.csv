@@ -1,0 +1,95 @@
+ID,Description,Pre-condition,Steps,Expected,Actual,Parameters
+TC-VALID-001,City name length within 1–30 characters,-,"1. Vào trang web.
+2. Nhập city='Hanoi'.
+3. Bấm nút 'Get Weather'.",System accepts the city name,,city=Hanoi
+TC-VALID-002,"City name with diacritics, valid",-,"1. Vào trang web.
+2. Nhập city='Hồ Chí Minh'.
+3. Bấm nút 'Get Weather'.",System accepts the city name,,city=Hồ Chí Minh
+TC-VALID-003,City name length equal to minimum valid value (1 character),-,"1. Vào trang web.
+2.  Nhập city='A'.
+3. Bấm nút 'Get Weather'.",System accepts the city name,,city=A
+TC-VALID-004,City name length equal to maximum valid value (30 characters),-,"1. Vào trang web.
+2.  Nhập city='ABCDEFGHIJKLMNOPQRSTUVWXYZABCD'.
+3. Bấm nút 'Get Weather'.",System accepts the city name,,city=ABCDEFGHIJKLMNOPQRSTUVWXYZABCD
+TC-VALID-005,Empty city name,-,"1. Vào trang web.
+2.  Nhập city=''.
+3. Bấm nút 'Get Weather'.",Error: 'Invalid city name',,city=
+TC-VALID-006,City name longer than 30 characters,-,"1. Vào trang web.
+2.  Nhập city='ThisCityNameIsWayTooLongForValidationTest'.
+3. Bấm nút 'Get Weather'.",Error: 'Invalid city name',,city=ThisCityNameIsWayTooLongForValidationTest
+TC-VALID-007,City name containing numbers,-,"1. Vào trang web.
+2.  Nhập city='HaNoi1'.
+3. Bấm nút 'Get Weather'.",Error: 'Invalid city name',,city=HaNoi1
+TC-VALID-008,City name containing special characters,-,"1. Vào trang web.
+2.  Nhập city='H@ Nội'.
+3. Bấm nút 'Get Weather'.",Error: 'Invalid city name',,city=H@ Nội
+TC-VALID-009,City name contains only spaces,-,"1. Vào trang web.
+2.  Nhập city=' '.
+3. Bấm nút 'Get Weather'.",Error: 'Invalid city name',,city=' '
+TC-VALID-010,City name length smaller than minimum value (0 characters),-,"1. Vào trang web.
+2.  Nhập city=''.
+3. Bấm nút 'Get Weather'.",Error: 'Invalid city name',,city=
+TC-VALID-011,City name length equal to minimum valid value (1 character),-,"1. Vào trang web.
+2.  Nhập city=' A'.
+3. Bấm nút 'Get Weather'.",Accept and allow input,,city=A
+TC-VALID-012,City name length just above minimum (2 characters),-,"1. Vào trang web.
+2.  Nhập city=' Ha'.
+3. Bấm nút 'Get Weather'.",Accept and allow input,,city=Ha
+TC-VALID-013,City name length just below maximum (29 characters),-,"1. Vào trang web.
+2.  Nhập city=' ABCDEFGHIJKLMNOPQRSTUVWXYZABC'.
+3. Bấm nút 'Get Weather'.",Accept and allow input,,city=ABCDEFGHIJKLMNOPQRSTUVWXYZABC
+TC-VALID-014,City name length equal to maximum valid value (30 characters),-,"1. Vào trang web.
+2.  Nhập city=' ABCDEFGHIJKLMNOPQRSTUVWXYZABCD'.
+3. Bấm nút 'Get Weather'.",Accept and allow input,,city=ABCDEFGHIJKLMNOPQRSTUVWXYZABCD
+TC-VALID-015,City name length greater than maximum valid value (31 characters),-,"1. Vào trang web.
+2. Nhập city='ABCDEFGHIJKLMNOPQRSTUVWXYZABCDE'.
+3. Bấm nút 'Get Weather'",Error: 'Invalid city name',,city=ABCDEFGHIJKLMNOPQRSTUVWXYZABCDE
+TC-CACHE-016,Cache hit,"System idle, cache has Hanoi","1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=Hanoi",Return JSON from cache (source=cache),,city=Hanoi
+TC-CACHE-017,"Cache miss, API success","System idle, API available","1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=London",Return JSON from API and save to cache,,city=London
+TC-CACHE-018,"Cache miss, API fail, stale cache exists",Stale cache exists,"1. Mở Postman.
+2. Mô phỏng API bị lỗi (ngắt mạng).
+3. Gửi request: GET http://localhost:3000/weather?city=Paris",Return stale JSON with warning,,city=Paris
+TC-CACHE-019,"Cache miss, API fail, no cache","No cache, API down","1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=Berlin",Return HTTP 503,,city=Berlin
+TC-API-020,Empty city parameter,-,"1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=",Return HTTP 400 + message,,city=
+TC-API-021,Retry with valid input after error,System previously in error,"1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=Tokyo",Return JSON from cache/API,,city=Tokyo
+TC-API-022,Send new request after success,System in valid state,"1. Sau khi đã test thành công với TC-API-021, gửi tiếp:
+GET http://localhost:3000/weather?city=NewYork","Reset state, return new JSON",,city=NewYork
+TC-CACHE-023,Cache hit (data available),Cache ready,"1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=Tokyo",Return cache data,,city=Hanoi
+TC-API-024,"Cache miss, API success","Cache empty, API available","1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=London",Return API data and save to cache,,city=London
+TC-CACHE-025,"Cache miss, API fail, stale exists",Stale cache exists,"1. Mở Postman.
+2. Mô phỏng API bị lỗi (ngắt mạng).
+3. Gửi request: GET http://localhost:3000/weather?city=Paris",Return stale data with warning,,city=Paris
+TC-API-026,"Cache miss, API fail, no cache","No cache, API down","1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=Berlin",Return HTTP 503,,city=Berlin
+TC-VALID-027,Invalid input,-,"1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=@@@",Return HTTP 400,,city=@@@
+TC-CACHE-028,Redis cache failure during lookup,Redis unavailable,"1. Tạm dừng Redis ( ở Docker).
+2. Trong Postman, gửi GET http://localhost:3000/weather?city=Hanoi.
+3. Quan sát log server và response.","Fallback to DB, log Redis error",,city=Hanoi
+TC-CACHE-029,Redis returns corrupted/invalid data,Cache contains malformed JSON,"1. Mở cmd.
+2. Gõ lệnh 'docker ps'
+3. Tìm kiếm container đang chạy redis (ví dụ: redis-cache)
+4. Gõ lệnh 'docker exec -it redis-cache redis-cli'
+5. Gõ lệnh 'SET weather:hanoi 'invalid_json''
+6. Mở Postman.
+7. Gửi request: GET http://localhost:3000/weather?city=Hanoi","System ignores cache, fetches fresh data",,city=Hanoi
+TC-API-030,Third-party API responds with unexpected schema,API returns invalid schema,"1. Mở Postman.
+2. Gửi request: GET http://localhost:3000/weather?city=Paris",System validates and uses default values,,city=Paris
+TC-API-031,Third-party API changes data type unexpectedly,API returns wrong types,1. Gửi request /weather?city=Berlin,"Reject invalid payload, log error",,city=Berlin
+TC-API-032,External API returns 500 Internal Server Error,API down,1. Gửi request /weather?city=London,Trigger fallback and log error,,city=London
+TC-API-033,External API returns timeout (>5s),API slow,1. Gửi request /weather?city=Paris,Abort request and use cache fallback,,city=Paris
+TC-API-034,External API returns empty body,API returns blank response,1. Gửi request /weather?city=Rome,"Log error, trigger retry or fallback",,city=Rome
+TC-API-035,External API returns malformed JSON,API returns invalid JSON,1. Gửi request /weather?city=Tokyo,Discard invalid data and use fallback,,city=Tokyo
+TC-UI-036,Display correct city name on dashboard,-,1. Nhập 'Hanoi' và click Search,Dashboard shows 'Weather in Hanoi',,city=Hanoi
+TC-UI-037,Error popup shown for invalid city,-,"1. Nhập city='@@@'
+ 2. Click Search",Popup shows 'Invalid city name',,city=@@@
+TC-UI-038,Displayed data matches API,API returns temp=32°C,1. Mở dashboard city='Hanoi',UI shows 32°C,,city=Hanoi
+TC-PERF-039,response time  P95 < 200ms when cache hit,Cache ready,1. Gửi request /weather?city=Hanoi,P95 < 200ms,,city=Hanoi
+TC-PERF-041,Response <800ms when API call,"Cache miss, API available",1. Gửi request /weather?city=London,Response time < 5 seconds,,city=London

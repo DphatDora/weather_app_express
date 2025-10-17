@@ -109,6 +109,19 @@ describe("Weather API - Input Validation Tests", () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toBe("Invalid city name");
   });
+
+  // TC-VALID-011: Leading space trimmed to 1 valid character
+  test("Accept city name with leading space trimmed to 1 character", async () => {
+    const res = await request(app).get("/weather").query({ city: " A" });
+    expect(res.status).toBe(200);
+  });
+
+  // TC-VALID-027: '@@@' should be rejected
+  test("Reject city name with only special characters '@@@'", async () => {
+    const res = await request(app).get("/weather").query({ city: "@@@" });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Invalid city name");
+  });
 });
 
 describe("Weather API - Cache and API Tests", () => {
