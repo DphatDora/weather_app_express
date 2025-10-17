@@ -4,13 +4,23 @@ const form = document.getElementById("weather-form");
 const cityInput = document.getElementById("city");
 const cityList = document.getElementById("city-list");
 const resultEl = document.getElementById("result");
-const errorEl = document.getElementById("error");
+const messageEl = document.getElementById("message");
 
 function show(el) {
   el.classList.remove("hidden");
 }
 function hide(el) {
   el.classList.add("hidden");
+}
+
+function showMessage(text, type = "error") {
+  messageEl.textContent = text;
+  messageEl.className = `message ${type}`;
+  show(messageEl);
+}
+
+function hideMessage() {
+  hide(messageEl);
 }
 
 // Load cities list for autocomplete
@@ -36,8 +46,9 @@ loadCities();
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const city = cityInput.value.trim();
-  if (!city) return;
-  hide(errorEl);
+
+  // Cho phép submit ngay cả khi không nhập gì (server sẽ validate)
+  hideMessage();
   hide(resultEl);
 
   const start = performance.now();
@@ -48,31 +59,35 @@ form.addEventListener("submit", async (e) => {
     const clientMs = Math.round(end - start);
 
     if (!resp.ok) {
-      errorEl.textContent = data?.message || "An error occurred";
-      show(errorEl);
+      showMessage(data?.message || "An error occurred", "error");
       return;
     }
 
+    // Hiển thị warning nếu có
+    if (data.warning) {
+      showMessage(data.warning, "warning");
+    }
+
+    // Hiển thị kết quả với style đẹp hơn
     const blocks = [];
     blocks.push(`<div><strong>City:</strong> ${data.city}</div>`);
-    blocks.push(
-      `<div><strong>Temperature:</strong> ${data.temperature} °C</div>`
-    );
+    blocks.push(`<div class="temperature">${data.temperature}°C</div>`);
     blocks.push(`<div><strong>Status:</strong> ${data.status}</div>`);
     blocks.push(`<div><strong>Response Time:</strong> ${clientMs} ms</div>`);
     blocks.push(
-      `<div><strong>Cache Hit:</strong> ${data.cache?.hit ? "Yes" : "No"}</div>`
+      `<div><strong>Cache:</strong> ${
+        data.cache?.hit ? "✓ Hit" : "✗ Miss"
+      }</div>`
     );
-    if (data.warning) {
+    if (data.cache?.stale) {
       blocks.push(
-        `<div class="warn"><strong>Warning:</strong> ${data.warning}</div>`
+        `<div style="color: #ff8800;"><strong>⚠️ Stale data</strong></div>`
       );
     }
 
     resultEl.innerHTML = blocks.join("");
     show(resultEl);
   } catch (err) {
-    errorEl.textContent = err?.message || "An error occurred";
-    show(errorEl);
+    showMessage(err?.message || "Network error occurred", "error");
   }
 });

@@ -48,12 +48,19 @@ router.get("/", async (req, res) => {
     if (cached) {
       wasCacheHit = true;
       const durationMs = Date.now() - start;
+      const cacheAge = cached.cachedAt
+        ? Math.floor((Date.now() - cached.cachedAt) / 1000)
+        : null;
       return res.json({
         city,
         temperature: cached.temperature,
         status: cached.status,
         responseTimeMs: durationMs,
-        cache: { hit: true, key: cacheKey },
+        cache: {
+          hit: true,
+          key: cacheKey,
+          ageSeconds: cacheAge,
+        },
         warning: cached.warning || null,
       });
     }
@@ -70,10 +77,12 @@ router.get("/", async (req, res) => {
       throw new Error("Invalid API response schema");
     }
 
-    await setCache(cacheKey, {
+    const cacheData = {
       temperature: data.temperature,
       status: data.status,
-    });
+      cachedAt: Date.now(),
+    };
+    await setCache(cacheKey, cacheData);
 
     return res.json({
       city,
@@ -92,12 +101,20 @@ router.get("/", async (req, res) => {
 
     if (cached) {
       warning = "Using cached data due to upstream error";
+      const cacheAge = cached.cachedAt
+        ? Math.floor((Date.now() - cached.cachedAt) / 1000)
+        : null;
       return res.json({
         city,
         temperature: cached.temperature,
         status: cached.status,
         responseTimeMs,
-        cache: { hit: true, key: cacheKey, stale: true },
+        cache: {
+          hit: true,
+          key: cacheKey,
+          stale: true,
+          ageSeconds: cacheAge,
+        },
         warning,
       });
     }
