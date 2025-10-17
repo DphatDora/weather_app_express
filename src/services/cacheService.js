@@ -50,7 +50,8 @@ async function setCache(key, value, ttlSeconds = DEFAULT_TTL_SECONDS) {
     const payload = JSON.stringify(value);
 
     // Add timeout to set operation (1 second)
-    const setPromise = client.set(key, payload, { EX: ttlSeconds });
+    // Persist key without TTL to allow stale fallback on upstream failures
+    const setPromise = client.set(key, payload);
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error("Cache set timeout")), 1000)
     );

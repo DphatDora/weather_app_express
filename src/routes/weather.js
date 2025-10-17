@@ -43,29 +43,34 @@ router.get("/", async (req, res) => {
   let warning = null;
 
   try {
-    // Cache hit
+    // Check cache first
     const cached = await getCache(cacheKey);
     if (cached) {
-      wasCacheHit = true;
-      const durationMs = Date.now() - start;
-      const cacheAge = cached.cachedAt
+      const cacheAgeSeconds = cached.cachedAt
         ? Math.floor((Date.now() - cached.cachedAt) / 1000)
         : null;
-      return res.json({
-        city,
-        temperature: cached.temperature,
-        status: cached.status,
-        responseTimeMs: durationMs,
-        cache: {
-          hit: true,
-          key: cacheKey,
-          ageSeconds: cacheAge,
-        },
-        warning: cached.warning || null,
-      });
+
+      // If cache is fresh (<= TTL), return it
+      if (cacheAgeSeconds !== null && cacheAgeSeconds <= DEFAULT_TTL_SECONDS) {
+        wasCacheHit = true;
+        const durationMs = Date.now() - start;
+        return res.json({
+          city,
+          temperature: cached.temperature,
+          status: cached.status,
+          responseTimeMs: durationMs,
+          cache: {
+            hit: true,
+            key: cacheKey,
+            ageSeconds: cacheAgeSeconds,
+          },
+          warning: cached.warning || null,
+        });
+      }
+      // Else: cache exists but stale -> try to refresh from API below
     }
 
-    // Cache miss, fetch from API
+    // Cache miss or stale, fetch from API
     const data = await fetchWeather(city, {
       provider: process.env.OPENWEATHER_PROVIDER,
       mockBaseUrl: `${req.protocol}://${req.get("host")}`,
@@ -94,8 +99,7 @@ router.get("/", async (req, res) => {
       warning,
     });
   } catch (err) {
-    // Cache miss, API fail, stale cache exists - return stale data with warning
-    // External API errors
+    // API fail, try return stale cache (if exists)
     const cached = await getCache(cacheKey);
     const responseTimeMs = Date.now() - start;
 
